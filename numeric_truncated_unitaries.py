@@ -85,3 +85,10 @@ def numeric_truncated_unitary(theta, phi, k):
     """
     H = numeric_truncated_hamiltonian(theta, phi, k)
     return expm(1j * H)
+
+
+# def general_truncated_unitary(I, k):
+#     """
+#     Given an interferometer I, find the unitary truncated at depth k.
+#     """
+#     # TODO

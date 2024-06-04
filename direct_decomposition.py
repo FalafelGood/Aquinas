@@ -1,8 +1,19 @@
 import interferometer as itf
 import numpy as np
 from qiskit import QuantumCircuit, transpile
+from qiskit.circuit.library import U1Gate
 from numeric_truncated_unitaries import *
 
+
+def check_if_power_of_two(n):
+    while True:
+        if n == 1:
+            return True
+        if n % 2 == 0:
+            n = n/2
+        else:
+            return False
+        
 
 def random_unitary(N):
     """Returns a random NxN unitary matrix
@@ -21,27 +32,24 @@ def random_unitary(N):
     return U
 
 
-def round_complex_matrix(matrix, epsilon=1e-10):
-    """
-    Given a complex matrix (numpy.ndarray), round epsilon small numbers to zero 
-    and 1-epsilon close numbers up to one.
-    """
-    small_indices = np.where(np.abs(matrix) < epsilon)
-    close_to_one_indices = np.where(np.abs(matrix - 1) < epsilon)
-    matrix[small_indices] = 0
-    matrix[close_to_one_indices] = 1
-    return matrix
-
 def compile_unitary(U):
     """
-    Wrapper function for unitary decomposition to quantum circuit
+    This wrapper function dictates how a given unitary matrix is decomposed into a quantum circuit.
     """
     dim = U.shape[0]
+    assert check_if_power_of_two(dim)
     num_qubits = int(np.log2(dim))
     qc = QuantumCircuit(num_qubits)
     qc.unitary(U, range(num_qubits))
-    compiled_qc = transpile(qc, basis_gates=['cx', 'u3'])
+    compiled_qc = transpile(qc, basis_gates=['cx', 'u3'], optimization_level=2)
+
+    # Compensate for global phase incurred in transpilation by rotating one qubit
+    global_phase = compiled_qc.global_phase
+    compensation_shift = U1Gate(-global_phase)
+    compiled_qc.append(compensation_shift, [0])
+    compiled_qc.global_phase = 0 # Manually set global phase to zero
     return compiled_qc
+
 
 
 def knit_qiskit_circuits(m, BS_list, circuits):
@@ -53,20 +61,21 @@ def knit_qiskit_circuits(m, BS_list, circuits):
     qubits_per_bs = circuits[0].num_qubits
     assert qubits_per_bs % 2 == 0 
     """
-    Note: qubits_per_bs must be even since the beamsplitter
-    has two modes and therefore two identically sized qubit
-    registers. This assertion is only a formality to make sure
+    A note on the above line: qubits_per_bs must be even since the beamsplitter
+    has two modes and therefore has two identically sized qubit
+    registers. The above assertion is only a formality to make sure
     the next line doesn't cause any mischief.
     """
-    qubits_per_mode = int(qubits_per_bs / 2)
-    total_num_qubits = qubits_per_mode * m # Remember m is equivalently the number of modes
-    # total_num_qubits = int(np.ceil(m/2)) * qubits_per_bs # TODO Work to understand this.
+    qubits_per_mode = int(qubits_per_bs / 2) # Two modes per beamsplitter
+    total_num_qubits = qubits_per_mode * m
     I_circ = QuantumCircuit(total_num_qubits)
     for idx, circ in enumerate(circuits):
-        upper_BS_mode = BS_list[idx].mode1 - 1 # Subtract one to start the mode count at zero
-        starting_qubit = upper_BS_mode * qubits_per_mode
+        assert(BS_list[idx].mode1 < BS_list[idx].mode2) # Sanity check to make sure mode 1 is lower
+        lower_BS_mode = BS_list[idx].mode1 - 1 # Subtract one so mode count begins at zero
+        starting_qubit = lower_BS_mode * qubits_per_mode
         acting_qubits = list(range(starting_qubit, starting_qubit + qubits_per_bs))
         I_circ.compose(circ, qubits=acting_qubits, inplace=True)
+        I_circ.barrier() # debug for visualisation
     return I_circ
 
 
@@ -80,15 +89,13 @@ def direct_decomposition(U, k):
     I = itf.square_decomposition(U) # type(I) == Interferometer
     for BS in I.BS_list:
         U_BS = numeric_truncated_unitary(BS.theta, BS.phi, k)
-        round_complex_matrix(U_BS)
-        circuits.append(compile_unitary(U_BS)) # Break into circuits with Solovey-Kitaev
+        circuits.append(compile_unitary(U_BS)) # Compile individual unitaries into quantum circuits
     interferometer_circuit = knit_qiskit_circuits(m, I.BS_list, circuits)
     return interferometer_circuit
 
 
 # def initial_state_circuit(U, k):
 #     return
-
 
 # # import quantum_decomp
 # quantum_decomp method of Fedoriaka et. al. -- Probably less efficient than qiskit's decomp
