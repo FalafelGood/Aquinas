@@ -8,22 +8,6 @@ sys.path.append('../') # Add parent directory to the system path
 from direct_decomposition import direct_decomposition
 
 
-# def photon_config_to_qubit_state(photon_config):
-#     """
-#     Convert an array of photons to the corresponding initial circuit state
-#     """
-#     num_photons = sum(photon_config)
-#     qubits_per_mode = int(np.ceil(np.log2(num_photons + 1)))
-#     initial_state = "" # String of zeros and ones
-#     for n in photon_config:
-#         # Translate int to binary
-#         b = bin(n)[2:]
-#         # padding = qubits_per_mode - len(b)
-#         b = b.zfill(qubits_per_mode) # Pad with zeros
-#         initial_state += b
-#     return initial_state
-
-
 def dist_to_state(dist):
     """
     Given a photon distribution, returns the corresponding binary state
@@ -73,7 +57,6 @@ def reverse_blocks(string, m):
     return reversed_string
 
 
-
 def run_interferom_simulation(U, photon_config, num_shots):
     """
     Compile and run a quantum circuit corresponding to a linear interferometer with unitary U.
@@ -103,11 +86,5 @@ def run_interferom_simulation(U, photon_config, num_shots):
     # Convert counts to probabilities
     for key in counts.keys():
         counts[key] = counts[key] / num_shots
-
-    # def estimate_error(probs, m):
-    #     for measurement in probs.keys():
-    #         output_config = reverse_blocks(measurement, m)
-    #         output_probability(photon_config, output_config, U)
-    #     return
 
     return counts

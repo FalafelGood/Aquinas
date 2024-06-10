@@ -120,17 +120,6 @@ def output_probability(photons_in, photons_out, unitary_mat):
 
     return modulus_squared / denom
 
-# print(type(random_interferometer(3)))
-# U = random_interferometer(3)
-# U=np.array([[0,1,0],[1,0,0],[0,0,-1]])
-# print(output_probability([0,1,2],[1,0,2], U))
-
-
 # """
 # Here ends the code from the Boson sampling library
 # """
-
-# from itertools import permutations
-
-# def calculate_probs():
-#     return
