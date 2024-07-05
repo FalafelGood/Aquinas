@@ -1,24 +1,27 @@
+# AMDG
 import numpy as np
-import sys
 from qiskit import QuantumCircuit, transpile
 from qiskit_aer import AerSimulator
-from boson_sampling_probabilities import output_probability
-
-sys.path.append('../') # Add parent directory to the system path
-from direct_decomposition import direct_decomposition
+from interferometer_circuits.boson_sampling_probabilities import output_probability
+from interferometer_circuits.direct_decomposition import direct_decomposition
 
 
-def dist_to_state(dist):
+def dist_to_state(dist, num_photons = None):
     """
-    Given a photon distribution, returns the corresponding binary state
+    Given a photon distribution, returns the corresponding state as a binary string
 
     Example:
     dist := [1,3] (One photon in first mode, 3 photons in second)
     >> '001 011'
     (Note, space only added for clarity)
+
+    If num_photons = None, the number of photons will be taken as the sum of 
+    the elements of dist. Else, this method will return a state in a statespace
+    that can support that number of photons.
     """
     state = ""
-    num_photons = sum(dist)
+    if num_photons == None: 
+        num_photons = sum(dist)
     qubits_per_mode = int(np.ceil(np.log2(num_photons+1)))
     for n in dist:
         bitstring = bin(n)[2:]
@@ -46,12 +49,29 @@ def state_to_dist(state, num_modes):
     return dist
 
 
-def reverse_blocks(string, m):
+def statevector_from_config(photon_config, little_endian = True, num_photons=None):
+    """
+    Given a photon configuration, this function returns the corresponding
+    statevector as an numpy array
+    """
+    binrep = dist_to_state(photon_config, num_photons = num_photons) # binary representation of state
+    if little_endian == True:
+        binrep = binrep[::-1]
+    
+    num_qubits = len(binrep) # number of qubits in circuit
+    statevector = np.zeros((2 ** num_qubits, 1), dtype=complex)
+    nonzero_index = int(binrep, 2)
+    statevector[nonzero_index] = 1.
+
+    return statevector
+
+
+def reverse_blocks(string, block_size):
     """
     This function splits a string up into blocks of length m, reverses the 
     order of the blocks and returns the resulting string
     """
-    blocks = [string[i:i+m] for i in range(0, len(string), m)]
+    blocks = [string[i:i+block_size] for i in range(0, len(string), block_size)]
     reversed_blocks = blocks[::-1]
     reversed_string = ''.join(reversed_blocks)
     return reversed_string

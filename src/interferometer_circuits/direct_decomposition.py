@@ -1,16 +1,21 @@
+# AMDG
 import interferometer as itf
 import numpy as np
 from qiskit import QuantumCircuit, transpile
 from qiskit.circuit.library import U1Gate
-from numeric_truncated_unitaries import *
+from interferometer_circuits.numeric_truncated_unitaries import *
 
 
 def check_if_power_of_two(n):
+    """
+    Hello Alan! I will learn your bithacking ways another day.
+    For now, enjoy your aneurysm!
+    """
     while True:
         if n == 1:
             return True
         if n % 2 == 0:
-            n = n/2
+            n = n / 2
         else:
             return False
         
@@ -34,7 +39,7 @@ def random_unitary(N):
 
 def compile_unitary(U):
     """
-    This wrapper function dictates how a given unitary matrix is decomposed into a quantum circuit.
+    This wrapper function takes a unitary matrix and transpiles it into a quantum circuit.
     """
     dim = U.shape[0]
     assert check_if_power_of_two(dim)
@@ -60,7 +65,7 @@ def knit_qiskit_circuits(m, BS_list, circuits):
     registers. The above assertion is only a formality to make sure
     the next line doesn't cause any mischief.
     """
-    qubits_per_mode = int(qubits_per_bs / 2) # Two modes per beamsplitter
+    qubits_per_mode = qubits_per_bs // 2 # Two modes per beamsplitter
     total_num_qubits = qubits_per_mode * m
     I_circ = QuantumCircuit(total_num_qubits)
     for idx, circ in enumerate(circuits):
@@ -72,22 +77,24 @@ def knit_qiskit_circuits(m, BS_list, circuits):
         I_circ.barrier() # debug for visualisation
     return I_circ
 
-# Attempt 3: Flipped indexing -- Failed?
+# # Flipped indexing
 # def knit_qiskit_circuits(m, BS_list, circuits):
 #     """
 #     Knit a collection of qiskit beamsplitter circuits into a single interferometer
 
-#     m: dimension of the interfeometer (equivalently the total number of modes)
+#         :: m : int :: Dimension of the interferometer (equivalently the total number of modes)
+#         :: BS_list : list<ITF> :: 
+#         :: circuits : list<Qiskit.Circuit> :: List of Qiskit circuits corresponding to the beamsplitters in BS_List 
 #     """
 #     qubits_per_bs = circuits[0].num_qubits
-#     assert qubits_per_bs % 2 == 0 
+#     assert (qubits_per_bs % 2) == 0 
 #     """
 #     A note on the above line: qubits_per_bs must be even since the beamsplitter
 #     has two modes and therefore has two identically sized qubit
 #     registers. The above assertion is only a formality to make sure
 #     the next line doesn't cause any mischief.
 #     """
-#     qubits_per_mode = int(qubits_per_bs / 2) # Two modes per beamsplitter
+#     qubits_per_mode = qubits_per_bs // 2 # Two modes per beamsplitter
 #     total_num_qubits = qubits_per_mode * m
 #     I_circ = QuantumCircuit(total_num_qubits)
 #     for idx, circ in enumerate(circuits):
@@ -104,21 +111,62 @@ def knit_qiskit_circuits(m, BS_list, circuits):
 #     return I_circ
 
 
+def BS_unitary(theta, phi):
+    """
+    Returns the unitary corresponding to a beamsplitter parameterised by 
+    theta (related to reflectivity) and phi (relative phase)
+    """
+    return np.array([[np.exp(1j * phi) * np.cos(theta), -np.sin(theta)],
+                     [np.exp(1j * phi) * np.sin(theta), np.cos(theta)]])
+
+
 def direct_decomposition(U, k):
     """
-    U: m*m unitary matrix representing an m mode interferometer
+    U: m * m unitary matrix representing an m mode interferometer
     k: Maximum number of photons that are expected at any given time
     """
     m = U.shape[0]
     circuits = []
     I = itf.square_decomposition(U) # type(I) == Interferometer
     for BS in I.BS_list:
-        U_BS = numeric_truncated_unitary(BS.theta, BS.phi, k)
-        circuits.append(compile_unitary(U_BS)) # Compile individual unitaries into quantum circuits
+        U_BS = BS_unitary(BS.theta, BS.phi)
+        U_trunc = numeric_truncated_unitary(U_BS, k, reverse_qubit_order=True)
+        circuits.append(compile_unitary(U_trunc)) # Compile individual unitaries into quantum circuits
     interferometer_circuit = knit_qiskit_circuits(m, I.BS_list, circuits)
-    # TODO: Add phase:
-    for idx, out_phi in enumerate(I.output_phases):
-        interferometer_circuit.rz(-out_phi, idx)
+    
+    # TODO, is this code working / doing anything?
+    # Add phases: 
+    # qubits_per_mode = int(np.log2(next_power_of_two(k+1)))
+    # for mode_idx, out_phi in enumerate(I.output_phases):
+    #     starting_qubit = qubits_per_mode * mode_idx
+    #     # finishing_qubit = qubits_per_mode * (mode_idx + 1)
+    #     # acting_qubits = range(starting_qubit, finishing_qubit)
+    #     # interferometer_circuit.rz(-out_phi, acting_qubits)
+    #     interferometer_circuit.rz(-out_phi, starting_qubit)
 
     return interferometer_circuit
 
+
+def decompose_from_interferom(I, k):
+    """
+    I: itf.Interferometer
+    k: Maximum number of photons that are expected at any given time
+    """
+    m = I.count_modes()
+    circuits = []
+    for BS in I.BS_list:
+        U_BS = BS_unitary(BS.theta, BS.phi)
+        U_trunc = numeric_truncated_unitary(U_BS, k, reverse_qubit_order=True) 
+        # Note: reverse_qargs = True is needed for Qiskit's little endian nonsense.
+        circuits.append(compile_unitary(U_trunc)) # Compile individual unitaries into quantum circuits
+    interferometer_circuit = knit_qiskit_circuits(m, I.BS_list, circuits)
+    
+    # Add phases:
+    # qubits_per_mode = int(np.log2(next_power_of_two(k+1)))
+    # for mode_idx, out_phi in enumerate(I.output_phases):
+    #     starting_qubit = qubits_per_mode * mode_idx
+    #     finishing_qubit = qubits_per_mode * (mode_idx + 1)
+    #     acting_qubits = range(starting_qubit, finishing_qubit)
+    #     interferometer_circuit.rz(-out_phi, acting_qubits)
+
+    return interferometer_circuit
