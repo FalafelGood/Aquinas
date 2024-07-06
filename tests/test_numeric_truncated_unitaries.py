@@ -193,8 +193,7 @@ class TestNumericTruncatedUnitary(unittest.TestCase):
         def a_dag(mode):
             return numeric_truncated_unitaries.a_dag(n = num_photons, mode = mode, total_modes = 3)
 
-        # Some random 3x3 unitary
-        
+        # An arbitrary 3x3 unitary
         U = [[0.808013 + 0.556201j, -0.180181 - 0.0664769j, 0.0295028 + 0.j], 
              [0.172644 + 0.0841329j, 0.918215 + 0.183126j, -0.294044 + 0.j], 
              [0.0281851 + 0.00871867j, 0.288183 + 0.0584175j, 0.955336 + 0.j]]

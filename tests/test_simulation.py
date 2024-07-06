@@ -1,7 +1,11 @@
 # AMDG
 import unittest
-from interferometer_circuits import simulation
 import numpy as np
+import interferometer as itf
+from interferometer_circuits import simulation
+from interferometer_circuits import direct_decomposition
+from interferometer_circuits import boson_sampling_probabilities
+
 
 class ConversionMethodsTest(unittest.TestCase):
 
@@ -75,13 +79,55 @@ class ConversionMethodsTest(unittest.TestCase):
         photon_config = [1,0]
         sv = simulation.statevector_from_config(photon_config, little_endian = False,
                                                 num_photons=2)
-        print(simulation.dist_to_state([1,0], num_photons=2))
         # Expected statevector: |01> \otimes |00> 
         nonzero_idx = 4
         expected_sv = np.zeros((16, 1), complex)
         expected_sv[nonzero_idx] = 1.
         assert(np.array_equal(sv, expected_sv))
 
+
+    def test_reverse_blocks(self):
+        initial_state = "100"
+        expected_state = "001"
+        state = simulation.reverse_blocks(initial_state, block_size=1)
+        assert(expected_state == state)
+
+        initial_state = "011011"
+        expected_state = "111001"
+        state = simulation.reverse_blocks(initial_state, block_size=2)
+        assert(expected_state == state)
+
+
+class CircuitSamplingTest(unittest.TestCase):
+    def test_circuit_sampling_probability(self):
+        BS_interferometer = itf.Interferometer()
+        theta = 0.1
+        phi = 0.1
+        BS = itf.Beamsplitter(1, 2, theta=theta, phi=phi)
+        BS_interferometer.add_BS(BS)
+        U_BS = BS_interferometer.calculate_transformation()
+        num_photons = 2
+        BS_circuit = direct_decomposition.direct_decomposition(U_BS, num_photons)
+        input_config = [2,0]
+        output_config = [2,0]
+        circuit_prob = simulation.circuit_sampling_probability(input_config, output_config, BS_circuit)
+        expected_prob = boson_sampling_probabilities.output_probability(input_config, output_config, U_BS)
+        assert(np.isclose(circuit_prob, expected_prob))
+
+
+    def test_multi_mode_sampling(self):
+
+        U = np.array([[0.808013 + 0.556201j, -0.180181 - 0.0664769j, 0.0295028 + 0.j], 
+             [0.172644 + 0.0841329j, 0.918215 + 0.183126j, -0.294044 + 0.j], 
+             [0.0281851 + 0.00871867j, 0.288183 + 0.0584175j, 0.955336 + 0.j]])
+        
+        num_photons = 3
+        input_config = [2,1,0]
+        output_config = [1,1,1]
+        interferometer_circuit = direct_decomposition.direct_decomposition(U, num_photons)
+        circuit_prob = simulation.circuit_sampling_probability(input_config, output_config, interferometer_circuit)
+        expected_prob = boson_sampling_probabilities.output_probability(input_config, output_config, U)
+        assert(circuit_prob == expected_prob)
 
 
 

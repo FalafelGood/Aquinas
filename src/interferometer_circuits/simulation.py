@@ -2,6 +2,7 @@
 import numpy as np
 from qiskit import QuantumCircuit, transpile
 from qiskit_aer import AerSimulator
+from qiskit.quantum_info import Operator
 from interferometer_circuits.boson_sampling_probabilities import output_probability
 from interferometer_circuits.direct_decomposition import direct_decomposition
 
@@ -108,3 +109,16 @@ def run_interferom_simulation(U, photon_config, num_shots):
         counts[key] = counts[key] / num_shots
 
     return counts
+
+
+def circuit_sampling_probability(input_config, output_config, interferometer_circuit):
+    """
+    Given an interferometer circuit, this function calculates the probability
+    of measuring a particular output distribution of photons given some input
+    distribution
+    """
+    circuit_U = Operator(interferometer_circuit).data
+    ket = statevector_from_config(input_config, little_endian = True)
+    bra = statevector_from_config(output_config, little_endian = True)
+    amplitude = (np.transpose(bra) @ circuit_U @ ket)[0,0]
+    return np.absolute(amplitude) ** 2
