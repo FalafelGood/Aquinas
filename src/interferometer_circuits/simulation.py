@@ -93,22 +93,28 @@ def run_interferom_simulation(U, photon_config, num_shots):
     num_qubits = qubits_per_mode * num_modes
     circuit = QuantumCircuit(num_qubits)
     
-    initial_state = dist_to_state(photon_config)
+    initial_state = dist_to_state(photon_config)[::-1] # Reversed for qiskit's little endian
     circuit.initialize(initial_state)
     interferom = direct_decomposition(U, num_photons)
     circuit.compose(interferom, qubits=list(range(num_qubits)), inplace=True)
     circuit.measure_all()
 
+    print(f"Num qubits {circuit.num_qubits}")
+    print(f"Circuit depth = {circuit.depth()}")
+
     simulator = AerSimulator()
-    circuit = transpile(circuit, simulator) # TODO, this big circuit can be further optimized
+    circuit = transpile(circuit, simulator)
     result = simulator.run(circuit, shots=num_shots).result()
     counts = result.get_counts(circuit)
 
     # Convert counts to probabilities
+    probs = dict()
     for key in counts.keys():
-        counts[key] = counts[key] / num_shots
+        # key is flipped since we no longer need to represent state in little endian
+        output_dist = tuple(state_to_dist(key[::-1], num_modes = num_modes))
+        probs[str(output_dist)] = counts[key] / num_shots
 
-    return counts
+    return probs
 
 
 def circuit_sampling_probability(input_config, output_config, interferometer_circuit):
