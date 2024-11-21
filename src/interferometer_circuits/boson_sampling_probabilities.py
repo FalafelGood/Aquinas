@@ -1,3 +1,4 @@
+# AMDG
 """
 This is code borrowed from the Boson Sampling Library (Copyright (C) 2021  If and Only If (Iff) Technologies)
 which falls under the GNU GENERAL PUBLIC LICENSE Version 3.
@@ -6,9 +7,11 @@ Repository:
 https://github.com/IffTech/Boson-Sampling/tree/main
 
 For some reason, this package isn't building for me. Jannis thought it was coderot in the .toml file.
-I'm copying what I need since I don't have time to diagnose the problem and I only really need one function.
+I'm copying what I need since I only really need one function.
 
 -Hudson
+
+P.S. I'm not writing unit tests for this since I trust it's correct.
 """
 
 
@@ -120,17 +123,6 @@ def output_probability(photons_in, photons_out, unitary_mat):
 
     return modulus_squared / denom
 
-# print(type(random_interferometer(3)))
-# U = random_interferometer(3)
-# U=np.array([[0,1,0],[1,0,0],[0,0,-1]])
-# print(output_probability([0,1,2],[1,0,2], U))
-
-
 # """
 # Here ends the code from the Boson sampling library
 # """
-
-# from itertools import permutations
-
-# def calculate_probs():
-#     return
