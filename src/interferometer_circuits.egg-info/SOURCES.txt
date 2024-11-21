@@ -9,5 +9,4 @@ src/interferometer_circuits.egg-info/PKG-INFO
 src/interferometer_circuits.egg-info/SOURCES.txt
 src/interferometer_circuits.egg-info/dependency_links.txt
 src/interferometer_circuits.egg-info/top_level.txt
-tests/test_interferometer.py
 tests/test_numeric_truncated_unitaries.py
