@@ -1,6 +1,6 @@
 # AMDG
 import unittest
-from interferometer_circuits import direct_decomposition, numeric_truncated_unitaries
+from Aquinas import direct_decomposition, numeric_truncated_unitaries
 import interferometer as itf
 import numpy as np
 from qiskit.quantum_info import Operator

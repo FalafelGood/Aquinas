@@ -2,9 +2,9 @@
 import unittest
 import numpy as np
 import interferometer as itf
-from interferometer_circuits import simulation
-from interferometer_circuits import direct_decomposition
-from interferometer_circuits import boson_sampling_probabilities
+from Aquinas import simulation
+from Aquinas import direct_decomposition
+from Aquinas import boson_sampling_probabilities
 
 
 class ConversionMethodsTest(unittest.TestCase):

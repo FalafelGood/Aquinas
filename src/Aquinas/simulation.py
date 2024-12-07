@@ -3,8 +3,8 @@ import numpy as np
 from qiskit import QuantumCircuit, transpile
 from qiskit_aer import AerSimulator
 from qiskit.quantum_info import Operator
-from interferometer_circuits.boson_sampling_probabilities import output_probability
-from interferometer_circuits.direct_decomposition import direct_decomposition
+from Aquinas.boson_sampling_probabilities import output_probability
+from Aquinas.direct_decomposition import direct_decomposition
 
 
 def dist_to_state(dist, num_photons = None):

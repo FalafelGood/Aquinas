@@ -3,7 +3,7 @@ import interferometer as itf
 import numpy as np
 from qiskit import QuantumCircuit, transpile
 from qiskit.circuit.library import U1Gate
-from interferometer_circuits.numeric_truncated_unitaries import *
+from Aquinas.numeric_truncated_unitaries import *
 
 
 def check_if_power_of_two(n):

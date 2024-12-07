@@ -3,7 +3,7 @@ import unittest
 import numpy as np
 from scipy.linalg import expm
 from scipy.linalg import logm
-from interferometer_circuits import numeric_truncated_unitaries
+from Aquinas import numeric_truncated_unitaries
 
 
 class TestBasicFunctions(unittest.TestCase):
