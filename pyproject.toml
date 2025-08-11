@@ -4,11 +4,11 @@ build-backend = "hatchling.build"
 
 [project]
 name = "Aquinas"
-description = "Software for compiling linear interferometers into digital quantum circuits using a technique in the second quantization. Not particularly performant, but it'll do the trick for small numbers of photons (n <= 8)"
 version = "0.0"
+description = "Software for compiling linear interferometers into digital quantum circuits using a technique in the second quantization."
 requires-python = ">=3.9"
-dependencies = ["numpy==1.23.4", "interferometer>=1.1.1",
-"scipy>=1.9.3 ", "qiskit>=1.1.0", "qiskit_aer>=0.11.1", "thewalrus>=0.21.0", "sympy>=1.11.1", "strawberryfields>=0.23.0",
+dependencies = ["numpy>=1.23.4", "interferometer==1.1.1",
+"scipy<1.14 ", "qiskit<=1.0", "qiskit_aer>=0.11.1", "thewalrus==0.21.0", "sympy>=1.11.1", "strawberryfields==0.22.0",
 ]
 authors = [
 {name = "Hudson Leone", email = "leoneht0@gmail.com"}

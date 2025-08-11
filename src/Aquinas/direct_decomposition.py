@@ -40,6 +40,7 @@ def random_unitary(N):
 def compile_unitary(U):
     """
     This wrapper function takes a unitary matrix and transpiles it into a quantum circuit.
+    Right now, we use qiskit's transpile method at optimization_level=2
     """
     dim = U.shape[0]
     assert check_if_power_of_two(dim)
@@ -76,39 +77,6 @@ def knit_qiskit_circuits(m, BS_list, circuits):
         I_circ.compose(circ, qubits=acting_qubits, inplace=True)
         I_circ.barrier() # debug for visualisation
     return I_circ
-
-# # Flipped indexing
-# def knit_qiskit_circuits(m, BS_list, circuits):
-#     """
-#     Knit a collection of qiskit beamsplitter circuits into a single interferometer
-
-#         :: m : int :: Dimension of the interferometer (equivalently the total number of modes)
-#         :: BS_list : list<ITF> :: 
-#         :: circuits : list<Qiskit.Circuit> :: List of Qiskit circuits corresponding to the beamsplitters in BS_List 
-#     """
-#     qubits_per_bs = circuits[0].num_qubits
-#     assert (qubits_per_bs % 2) == 0 
-#     """
-#     A note on the above line: qubits_per_bs must be even since the beamsplitter
-#     has two modes and therefore has two identically sized qubit
-#     registers. The above assertion is only a formality to make sure
-#     the next line doesn't cause any mischief.
-#     """
-#     qubits_per_mode = qubits_per_bs // 2 # Two modes per beamsplitter
-#     total_num_qubits = qubits_per_mode * m
-#     I_circ = QuantumCircuit(total_num_qubits)
-#     for idx, circ in enumerate(circuits):
-#         assert(BS_list[idx].mode1 < BS_list[idx].mode2) # Sanity check to make sure mode 1 is lower
-
-#         lower_BS_mode = BS_list[idx].mode1 - 1 # Subtract one so mode count begins at zero
-#         bottom_qubit = lower_BS_mode * qubits_per_mode
-        
-#         # Move beamsplitter to the opposite half of the circuit
-#         bottom_qubit = total_num_qubits - (bottom_qubit + qubits_per_bs)
-#         acting_qubits = list(range(bottom_qubit, bottom_qubit + qubits_per_bs))
-#         I_circ.compose(circ, qubits=acting_qubits, inplace=True)
-#         I_circ.barrier() # debug for visualisation
-#     return I_circ
 
 
 def BS_unitary(theta, phi):
